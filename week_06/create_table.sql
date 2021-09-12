@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS `t_store` (
 
 --3.商品表
 CREATE TABLE IF NOT EXISTS `t_goods` (
-    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `name` varchar(16) NOT NULL COMMENT '主键，商店id',
+    `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键，商店id',
+    `name` varchar(16) NOT NULL COMMENT '商品名称',
     `description` varchar(1024) NOT NULL COMMENT '描述',
     `price` decimal(6,2) NOT NULL COMMENT '价格',
     `weight` int(11) NOT NULL COMMENT '重量',
