@@ -8,5 +8,8 @@
 
 2.（必做）读写分离 - 动态切换数据源版本 1.0
 
+具体代码：https://github.com/peanutnowing/training-2021/tree/master/week_07/code/src/main/java/com/example/demo/database
 
-3.（必做）读写分离 - 数据库框架版本 2.0InsertDemo
+3.（必做）读写分离 - 数据库框架版本 2.0
+
+具体代码：https://github.com/peanutnowing/training-2021/blob/master/week_07/code/src/main/java/com/example/demo/shardingsphere/raw/jdbc/ShardingMasterSlaveDataSource.java
