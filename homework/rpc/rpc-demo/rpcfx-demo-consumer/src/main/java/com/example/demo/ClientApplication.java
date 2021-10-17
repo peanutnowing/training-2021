@@ -1,7 +1,6 @@
 package com.example.demo;
 
 import com.example.demo.proxy.RpcByteBuddy;
-import com.example.demo.proxy.RpcClient;
 import com.example.demo.proxy.RpcClientJdk;
 import com.example.demo.model.Order;
 import com.example.demo.model.User;

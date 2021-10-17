@@ -18,17 +18,22 @@
 package com.example.demo.proxy;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.parser.ParserConfig;
+
 import com.example.demo.api.RpcRequest;
 import com.example.demo.api.RpcResponse;
+import com.example.demo.discovery.DiscoveryClient;
 import com.example.demo.netty.client.RpcNettyClientSync;
+import filter.client.Retry;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
+
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用于jdk、cglib、buddy
@@ -39,22 +44,66 @@ import java.net.URISyntaxException;
 public class RpcInvocationHandler implements InvocationHandler, MethodInterceptor {
 
     private final Class<?> serviceClass;
-    private final String url;
+    private final String group;
+    private final String version;
+    private final DiscoveryClient discoveryClient = DiscoveryClient.getInstance();
+    private final List<String> tags = new ArrayList<>();
+    private int retryTime = 0;
 
-    <T> RpcInvocationHandler(Class<T> serviceClass, String url) {
+    <T> RpcInvocationHandler(Class<T> serviceClass) {
         this.serviceClass = serviceClass;
-        this.url = url;
-        ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
+        this.group = "default";
+        this.version = "default";
+        System.out.println("Client Service Class Reflect: " + group + ":" + version);
+    }
+
+    <T> RpcInvocationHandler(Class<T> serviceClass, String group, String version) {
+        this.serviceClass = serviceClass;
+        this.group = group;
+        this.version = version;
+        System.out.println("Client Service Class Reflect: " + group + ":" + version);
+    }
+
+    <T> RpcInvocationHandler(Class<T> serviceClass, String group, String version, List<String> tags) {
+        this.serviceClass = serviceClass;
+        this.group = group;
+        this.version = version;
+        this.tags.addAll(tags);
+        System.out.println("Client Service Class Reflect: " + group + ":" + version);
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        return process(serviceClass, method, args, url);
+        try {
+            return process(serviceClass, method, args);
+        } catch (Exception e) {
+            if (retryTime < Retry.getRetryLimit()) {
+                log.info("send to rpc server exception, will retry");
+                retryTime += 1;
+                invoke(proxy, method, args);
+            } else {
+                log.info("retry limit, end");
+                retryTime = 0;
+            }
+        }
+        return null;
     }
 
     @Override
     public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) {
-        return process(serviceClass, method, args, url);
+        try {
+            return process(serviceClass, method, args);
+        } catch (Exception e) {
+            if (retryTime < Retry.getRetryLimit()) {
+                log.info("send to rpc server exception, will retry");
+                retryTime += 1;
+                intercept(o, method, args, methodProxy);
+            } else {
+                log.info("retry limit, end");
+                retryTime = 0;
+            }
+        }
+        return null;
     }
 
     /**
@@ -63,10 +112,9 @@ public class RpcInvocationHandler implements InvocationHandler, MethodIntercepto
      * @param service service name
      * @param method service method
      * @param params method params
-     * @param url server host
      * @return object
      */
-    private Object process(Class<?> service, Method method, Object[] params, String url) {
+    private Object process(Class<?> service, Method method, Object[] params) {
         log.info("Client proxy instance method invoke");
 
         // 自定义了Rpc请求的结构 RpcRequest,放入接口名称、方法名、参数
@@ -75,6 +123,21 @@ public class RpcInvocationHandler implements InvocationHandler, MethodIntercepto
         rpcRequest.setServiceClass(service.getName());
         rpcRequest.setMethod(method.getName());
         rpcRequest.setArgv(params);
+        rpcRequest.setGroup(group);
+        rpcRequest.setVersion(version);
+
+        // 从DiscoveryClient中获取某个Provider的请求地址
+        String url = null;
+        try {
+            url = discoveryClient.getProviders(service.getName(), group, version, tags, method.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (url == null) {
+            System.out.println("\nCan't find provider\n");
+            return null;
+        }
 
         // 客户端使用的 netty，发送请求到服务端，拿到结果（自定义结构：rpcfxResponse)
         log.info("Client send request to Server");

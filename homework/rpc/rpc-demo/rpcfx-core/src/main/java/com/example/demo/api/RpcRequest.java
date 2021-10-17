@@ -24,4 +24,12 @@ public class RpcRequest {
      * 参数
      */
     private Object[] argv;
+    /**
+     * 分组
+     */
+    private String group;
+    /**
+     * 版本
+     */
+    private String version;
 }
