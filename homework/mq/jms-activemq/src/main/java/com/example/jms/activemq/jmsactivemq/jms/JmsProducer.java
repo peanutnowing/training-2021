@@ -1,5 +1,5 @@
 
-package com.example.jms.activemq.jmsactivemp.jms;
+package com.example.jms.activemq.jmsactivemq.jms;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;

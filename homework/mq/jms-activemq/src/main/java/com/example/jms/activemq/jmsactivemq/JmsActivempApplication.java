@@ -1,6 +1,6 @@
-package com.example.jms.activemq.jmsactivemp;
+package com.example.jms.activemq.jmsactivemq;
 
-import com.example.jms.activemq.jmsactivemp.jms.JmsProducer;
+import com.example.jms.activemq.jmsactivemq.jms.JmsProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,13 +21,13 @@ import java.util.Map;
 @SpringBootApplication
 @EnableJms
 @Slf4j
-public class JmsActivempApplication implements ApplicationRunner {
+public class JmsActivemqApplication implements ApplicationRunner {
 
     @Autowired
     private JmsProducer producer;
 
     public static void main(String[] args) {
-        SpringApplication.run(JmsActivempApplication.class, args);
+        SpringApplication.run(JmsActivemqApplication.class, args);
     }
 
     @Override

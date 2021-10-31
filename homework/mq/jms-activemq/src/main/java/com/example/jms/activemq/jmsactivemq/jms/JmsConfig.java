@@ -1,5 +1,5 @@
 
-package com.example.jms.activemq.jmsactivemp.jms;
+package com.example.jms.activemq.jmsactivemq.jms;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.context.annotation.Bean;
